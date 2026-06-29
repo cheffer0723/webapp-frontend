@@ -22,6 +22,7 @@ function markIntroSeen() {
 export function IntroReveal() {
   const [visible, setVisible] = useState(() => {
     if (typeof window === "undefined") return false;
+    if (import.meta.env.PROD) return false;
     if (
       import.meta.env.DEV &&
       new URLSearchParams(window.location.search).has("nointro")
