@@ -22,7 +22,6 @@ function markIntroSeen() {
 export function IntroReveal() {
   const [visible, setVisible] = useState(() => {
     if (typeof window === "undefined") return false;
-    if (import.meta.env.PROD) return false;
     if (
       import.meta.env.DEV &&
       new URLSearchParams(window.location.search).has("nointro")
@@ -35,10 +34,11 @@ export function IntroReveal() {
   useEffect(() => {
     if (!visible) return;
     document.body.style.overflow = "hidden";
+    const introDurationMs = import.meta.env.PROD ? 1200 : 1700;
     const t = setTimeout(() => {
       setVisible(false);
       markIntroSeen();
-    }, 1700);
+    }, introDurationMs);
     return () => clearTimeout(t);
   }, [visible]);
 
