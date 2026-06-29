@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
-const BETA_REQUEST_EMAIL = "TODO"; // TODO: replace with the real beta intake email address.
+const BETA_REQUEST_EMAIL = "contact@obsidianabyss.com";
 
 const whatThisIs = [
   {
