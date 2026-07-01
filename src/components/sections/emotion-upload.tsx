@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { UploadCloud, FileText, Loader2 } from "lucide-react";
 import { DecodeText } from "../ui/decode-text";
 import { scrollToSection } from "@/lib/scroll-to";
+import { uploadEmotionCsv } from "@/lib/api";
 import {
   csvExample,
   parseTradeCount,
@@ -136,7 +137,7 @@ export function EmotionUpload() {
     [handleFile],
   );
 
-  const submit = useCallback(() => {
+  const submit = useCallback(async () => {
     if (!fileName) {
       setError("Choose a CSV file first.");
       setStatus("error");
@@ -149,16 +150,26 @@ export function EmotionUpload() {
     }
     setStatus("processing");
     setError(null);
-    window.setTimeout(() => {
+    try {
+      setResult(await uploadEmotionCsv(textRef.current));
+      setStatus("done");
+    } catch (apiError) {
+      const message = apiError instanceof Error ? apiError.message : "Upload failed.";
+      if (message.includes("CSV") || message.includes("invalid") || message.includes("header")) {
+        setError(message);
+        setStatus("error");
+        return;
+      }
+
       const count = parseTradeCount(textRef.current);
       if (count <= 0) {
-        setError("No trades found in that file. Check the format below.");
+        setError(message);
         setStatus("error");
         return;
       }
       setResult(simulateUpload(count));
       setStatus("done");
-    }, 1500);
+    }
   }, [fileName, fileReady]);
 
   const reset = useCallback(() => {

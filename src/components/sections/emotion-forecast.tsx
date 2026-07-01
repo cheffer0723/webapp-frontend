@@ -1,11 +1,13 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { DecodeText } from "../ui/decode-text";
 import { useDemoAccess } from "@/context/demo-access-context";
-import { forecastRegimes } from "@/lib/emotion-data";
+import { fetchRegimeForecast, getForecastFallback } from "@/lib/api";
+import { forecastRegimes, type RegimeForecast } from "@/lib/emotion-data";
 import { scrollToSection } from "@/lib/scroll-to";
 
-function MemberForecast() {
+function MemberForecast({ regimes }: { regimes: RegimeForecast[] }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -13,7 +15,7 @@ function MemberForecast() {
       transition={{ duration: 0.5 }}
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {forecastRegimes.map((r) => {
+        {regimes.map((r) => {
           const inMarket = r.status === "IN";
           const accent = inMarket ? "text-emerald-400" : "text-rose-400";
           const border = inMarket
@@ -71,7 +73,7 @@ function MemberForecast() {
           What this means for your next trade
         </div>
         <ul className="space-y-2.5">
-          {forecastRegimes.map((r) => (
+          {regimes.map((r) => (
             <li key={r.symbol} className="flex items-start gap-3 text-white/70 text-sm">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-primary" />
               <span>
@@ -129,6 +131,25 @@ function ForecastTeaser() {
 
 export function EmotionForecast() {
   const { hasAccess, setHasAccess } = useDemoAccess();
+  const [regimes, setRegimes] = useState<RegimeForecast[]>(forecastRegimes);
+
+  useEffect(() => {
+    if (!hasAccess) return;
+
+    let cancelled = false;
+    fetchRegimeForecast()
+      .then((data) => {
+        if (!cancelled) setRegimes(data);
+      })
+      .catch(() => {
+        if (!cancelled) setRegimes(getForecastFallback());
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasAccess]);
+
   return (
     <section
       id="forecast"
@@ -186,7 +207,7 @@ export function EmotionForecast() {
           </div>
         </div>
 
-        {hasAccess ? <MemberForecast /> : <ForecastTeaser />}
+        {hasAccess ? <MemberForecast regimes={regimes} /> : <ForecastTeaser />}
       </div>
     </section>
   );
